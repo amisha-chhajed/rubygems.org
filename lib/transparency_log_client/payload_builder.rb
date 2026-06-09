@@ -6,28 +6,22 @@ require "base64"
 
 module Tlog
   class PayloadBuilder
-
-    # hashrekord payload
     def self.build(json_payload)
-      raw        = JSON.dump(json_payload)
-      key        = load_private_key
-      signature  = sign(key, raw)
-      public_key = key.public_key.to_pem
+      raw       = JSON.dump(json_payload)
+      key       = load_private_key
+      signature = sign(key, raw)
+      pub_der   = key.public_to_der
 
       {
-        "kind"       => "hashedrekord",
-        "apiVersion" => "0.0.1",
-        "spec"       => {
-          "data"      => {
-            "hash" => {
-              "algorithm" => "sha256",
-              "value"     => hex_digest(raw)
-            }
-          },
+        "hashedRekordRequestV002" => {
+          "digest"    => base64_encode(hex_digest_raw(raw)),
           "signature" => {
-            "content"   => base64_encode(signature),
-            "publicKey" => {
-              "content" => base64_encode(public_key)
+            "content"  => base64_encode(signature),
+            "verifier" => {
+              "publicKey" => {
+                "rawBytes" => base64_encode(pub_der)
+              },
+              "keyDetails" => "PKIX_ECDSA_P256_SHA_256"
             }
           }
         }
@@ -37,16 +31,15 @@ module Tlog
     private
 
     def self.load_private_key
-      pem = "placeholder" #Rails.application.credentials.dig(:tlog, :private_key)
-      OpenSSL::PKey::EC.new(pem)
+      OpenSSL::PKey::EC.generate("prime256v1")
     end
 
     def self.sign(key, data)
       key.sign(OpenSSL::Digest::SHA256.new, data)
     end
 
-    def self.hex_digest(data)
-      OpenSSL::Digest::SHA256.hexdigest(data)
+    def self.hex_digest_raw(data)
+      OpenSSL::Digest::SHA256.digest(data)
     end
 
     def self.base64_encode(data)

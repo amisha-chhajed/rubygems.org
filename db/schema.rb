@@ -650,6 +650,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_195603) do
     t.index ["user_id"], name: "index_subscriptions_on_user_id"
   end
 
+  create_table "transparency_events", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "event_type"
+    t.string "gem_name"
+    t.string "leaf_hash"
+    t.integer "leaf_index"
+    t.datetime "updated_at", null: false
+    t.string "version_number"
+    t.string "version_sha256"
+  end
+
+  create_table "transparency_tree_heads", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "root_hash"
+    t.datetime "timestamp"
+    t.integer "tree_size"
+    t.datetime "updated_at", null: false
+  end
+
   create_table "users", id: :serial, force: :cascade do |t|
     t.string "api_key"
     t.string "blocked_email"
