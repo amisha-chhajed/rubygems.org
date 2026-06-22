@@ -23,7 +23,7 @@ class TransparencyLog::TlogEntryBuilderTest < ActiveSupport::TestCase
     )
 
     assert @private_key.verify(
-      OpenSSL::Digest::SHA256.new,
+      OpenSSL::Digest.new("SHA256"),
       signature,
       @json_payload
     )
