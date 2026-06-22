@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative "../../test_helper"
-require_relative "../../../lib/transparency_log_client/payload_builder"
+require "test_helper"
+require "transparency_log_client/payload_builder"
 
 class PayloadBuilderTest < Minitest::Test
   def test_build
