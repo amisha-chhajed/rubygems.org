@@ -3,7 +3,7 @@
 require "test_helper"
 
 class TlogTest < ActiveSupport::TestCase
-  test "placeholder" do
-    assert true
+  test "can be instantiated" do
+    assert_instance_of TransparencyLog::Tlog, TransparencyLog::Tlog.new
   end
 end
