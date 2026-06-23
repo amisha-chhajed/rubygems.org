@@ -219,8 +219,13 @@ class SessionsControllerTest < ActionController::TestCase
         end
 
         should "track login success with Datadog AppSec" do
-          Datadog::Kit::AppSec::Events::V2.expects(:track_user_login_success).with(@user.id.to_s)
-          post :create, params: { session: { who: "login", password: PasswordHelpers::SECURE_TEST_PASSWORD } }
+          span = with_appsec_trace do
+            post :create, params: { session: { who: "login", password: PasswordHelpers::SECURE_TEST_PASSWORD } }
+          end
+
+          assert_equal "true", span.get_tag("appsec.events.users.login.success.track")
+          assert_match(/428821350e96.*665324/, span.get_tag("appsec.events.users.login.success.usr.login"))
+          assert_equal @user.id.to_s, span.get_tag("usr.id")
         end
 
         should "set security device notice" do
@@ -321,15 +326,24 @@ class SessionsControllerTest < ActionController::TestCase
 
       should "track login failure with Datadog AppSec for an existing user" do
         user = create(:user, handle: "existinglogin")
-        Datadog::Kit::AppSec::Events::V2.expects(:track_user_login_failure).with(user.id.to_s, true)
-        post :create, params: { session: { who: "existinglogin", password: "wrongpassword" } }
+        span = with_appsec_trace do
+          post :create, params: { session: { who: "existinglogin", password: "wrongpassword" } }
+        end
+
+        assert_equal "true", span.get_tag("appsec.events.users.login.failure.track")
+        assert_match(/4041d06f2aec.*fb5368/, span.get_tag("appsec.events.users.login.failure.usr.login"))
+        assert_equal "true", span.get_tag("appsec.events.users.login.failure.usr.exists")
+        assert_equal user.id.to_s, span.get_tag("appsec.events.users.login.failure.usr.id")
       end
 
       should "track login failure with Datadog AppSec for an unknown user" do
-        Datadog::Kit::AppSec::Events::V2.expects(:track_user_login_failure).with(
-          Digest::SHA256.hexdigest("nobody"), false
-        )
-        post :create, params: { session: { who: "nobody", password: "wrongpassword" } }
+        span = with_appsec_trace do
+          post :create, params: { session: { who: "nobody", password: "wrongpassword" } }
+        end
+
+        assert_equal "true", span.get_tag("appsec.events.users.login.failure.track")
+        assert_match(/6382b3cc8814.*51462a/, span.get_tag("appsec.events.users.login.failure.usr.login"))
+        assert_equal "false", span.get_tag("appsec.events.users.login.failure.usr.exists")
       end
     end
 

@@ -55,7 +55,12 @@ class ApplicationController < ActionController::Base
     set_tag "gemcutter.user.id", current_user.id
 
     trace = Datadog::Tracing.active_trace
-    Datadog::Kit::Identity.set_user(trace, id: current_user.id.to_s) if trace
+    return unless trace
+    Datadog::Kit::Identity.set_user(
+      trace,
+      id: current_user.id.to_s,
+      login: Digest::SHA256.hexdigest(current_user.handle || current_user.email)
+    )
   end
 
   rescue_from(ActionController::ParameterMissing) do |e|
@@ -86,7 +91,7 @@ class ApplicationController < ActionController::Base
   end
 
   def cacheable_request?
-    !signed_in?
+    !signed_in? && flash.empty?
   end
 
   def cache_expiry_headers(expiry: 60, fastly_expiry: 3600)

@@ -23,7 +23,7 @@ gem "flipper-active_record", "~> 1.4"
 gem "flipper-ui", "~> 1.4"
 gem "good_job", "~> 3.99"
 gem "gravtastic", "~> 3.2"
-gem "honeybadger", "~> 6.6.1", require: false
+gem "honeybadger", "~> 6.9.0", require: false
 gem "http_accept_language", "~> 2.1"
 gem "kaminari", "~> 1.2"
 gem "mail", "~> 2.9"
@@ -34,7 +34,7 @@ gem "omniauth-rails_csrf_protection", "~> 2.0"
 gem "openid_connect", "~> 2.5"
 gem "pg", "~> 1.6"
 gem "public_suffix", "~> 7.0"
-gem "puma", "~> 6.6"
+gem "puma", "~> 8.0"
 gem "puma-plugin-statsd", "~> 2.8"
 gem "rack", "~> 3.2"
 gem "rackup", "~> 2.3"
@@ -73,7 +73,7 @@ gem "yaml-schema", "~> 1.2"
 # Admin dashboard
 gem "avo", "~> 3.13"
 gem "pagy", "~> 8.4"
-gem "view_component", "~> 4.11.0"
+gem "view_component", "~> 4.12.0"
 gem "pundit", "~> 2.5"
 gem "chartkick", "~> 5.2"
 gem "groupdate", "~> 6.8"
@@ -102,7 +102,7 @@ gem "local_time", "~> 3.0"
 gem "herb", "~> 0.10"
 
 group :assets, :development do
-  gem "tailwindcss-rails", "~> 4.4"
+  gem "tailwindcss-rails", "~> 4.5"
 end
 
 group :development, :test do
@@ -119,7 +119,7 @@ group :development, :test do
   gem "pg_query", "~> 6.2"
 
   # bundle show | rg rubocop | cut -d' ' -f4 | xargs bundle update
-  gem "rubocop", "~> 1.87", require: false
+  gem "rubocop", "~> 1.88", require: false
   gem "rubocop-rails", "~> 2.35", require: false
   gem "rubocop-performance", "~> 1.26", require: false
   gem "rubocop-minitest", "~> 0.39", require: false
@@ -128,7 +128,7 @@ group :development, :test do
 end
 
 group :development do
-  gem "rails-erd", "~> 1.7"
+  gem "rails-erd", "~> 2.0"
   gem "listen", "~> 3.10"
   gem "letter_opener", "~> 1.10"
   gem "letter_opener_web", "~> 3.0"
@@ -145,11 +145,11 @@ group :test do
   gem "rails-controller-testing", "~> 1.0"
   gem "mocha", "~> 3.1", require: false
   gem "shoulda-context", "~> 3.0.0.rc1"
-  gem "shoulda-matchers", "~> 7.0"
+  gem "shoulda-matchers", "~> 8.0"
   gem "capybara-playwright-driver", "~> 0.5"
   gem "webmock", "~> 3.26"
   gem "simplecov", "~> 0.22", require: false
-  gem "simplecov-cobertura", "~> 3.1", require: false
+  gem "simplecov-cobertura", "~> 3.2", require: false
   gem "aggregate_assertions", "~> 0.3.0"
   gem "minitest-gcstats", "~> 1.3"
   gem "minitest-reporters", "~> 1.8"
