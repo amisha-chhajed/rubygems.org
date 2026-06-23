@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_16_014850) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_26_195603) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "hstore"
   enable_extension "pg_catalog.plpgsql"
@@ -648,14 +648,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_16_014850) do
     t.integer "user_id"
     t.index ["rubygem_id"], name: "index_subscriptions_on_rubygem_id"
     t.index ["user_id"], name: "index_subscriptions_on_user_id"
-  end
-
-  create_table "transparency_logs", force: :cascade do |t|
-    t.jsonb "body"
-    t.datetime "created_at", null: false
-    t.string "event_type"
-    t.jsonb "response"
-    t.datetime "updated_at", null: false
   end
 
   create_table "users", id: :serial, force: :cascade do |t|
