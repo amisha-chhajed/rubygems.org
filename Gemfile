@@ -7,7 +7,7 @@ ruby file: ".ruby-version"
 gem "rails", "~> 8.1.3"
 gem "rails-i18n", "~> 8.1.0"
 
-gem "aws-sdk-s3", "~> 1.225"
+gem "aws-sdk-s3", "~> 1.226"
 gem "aws-sdk-sqs", "~> 1.116"
 gem "bootsnap", "~> 1.24"
 gem "clearance", "~> 2.12"
@@ -39,7 +39,7 @@ gem "puma-plugin-statsd", "~> 2.8"
 gem "rack", "~> 3.2"
 gem "rackup", "~> 2.3"
 gem "rack-sanitizer", "~> 2.0"
-gem "rbtrace", "~> 0.5.3"
+gem "rbtrace", "~> 0.5.4"
 gem "rdoc", "~> 7.2"
 gem "roadie-rails", "~> 3.4"
 gem "ruby-magic", "~> 0.6"
@@ -88,7 +88,7 @@ end
 # Logging
 gem "amazing_print", "~> 2.0"
 gem "rails_semantic_logger", "~> 4.20"
-gem "pp", "0.6.3"
+gem "pp", "0.6.4"
 
 # Former default gems
 gem "csv", "~> 3.3" # zeitwerk-2.6.12
@@ -102,7 +102,7 @@ gem "local_time", "~> 3.0"
 gem "herb", "~> 0.10"
 
 group :assets, :development do
-  gem "tailwindcss-rails", "~> 4.5"
+  gem "tailwindcss-rails", "~> 4.6"
 end
 
 group :development, :test do
