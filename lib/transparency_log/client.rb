@@ -19,6 +19,9 @@ class TransparencyLog::Client
       JSON.dump(entry),
       headers
     )
+  rescue Net:HTTP:Error => e
+    # handle gracefully
+    Rails.logger.info("Transparency Log Error: HTTP #{e.status_code} error: #{e.error}")
   end
 
   private

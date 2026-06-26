@@ -4,41 +4,21 @@ require "test_helper"
 
 class TransparencyLog::ClientTest < ActiveSupport::TestCase
   setup do
-    @url = "http://example.test"
-    @client = TransparencyLog::Client.new(@url)
+    @transparency_log_entry = create(:transparency_log_event)
+    @client = TransparencyLog::Client.new("http://example.test")
   end
 
   test "posts entry to rekor log entries endpoint" do
-    entry = {
-      "hashedRekordRequestV002" => {
-        "digest" => "abc123",
-        "signature" => {
-          "content" => "signature123",
-          "verifier" => {
-            "publicKey" => {
-              "rawBytes" => "publickey123"
-            },
-            "keyDetails" => "PKIX_ECDSA_P256_SHA_256"
-          }
-        }
-      }
-    }
+    payload = TransparencyLog::EntryBuilder.build(@transparency_log_entry)
 
-    stub_request(:post, "#{@url}/api/v2/log/entries")
-      .with(
-        body: JSON.dump(entry),
-        headers: {
-          "Content-Type" => "application/json",
-          "Accept" => "application/json"
-        }
-      )
+    stub_request(:post, "http://example.test/api/v2/log/entries")
       .to_return(
         status: 201,
         body: { uuid: "abc", logIndex: 1 }.to_json,
         headers: { "Content-Type" => "application/json" }
       )
 
-    response = @client.post(entry)
+    response = @client.post(payload)
 
     assert_equal "201", response.code
     assert_equal(
@@ -46,4 +26,8 @@ class TransparencyLog::ClientTest < ActiveSupport::TestCase
       JSON.parse(response.body)
     )
   end
+
+  test "raises an error when HTTP 500"
+  test "raises an error when connection failed"
+  test "raisea an error when connection timed out"
 end
