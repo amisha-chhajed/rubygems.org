@@ -2,6 +2,19 @@
 
 # Captures the signed payload and Rekor submission state for a RubyGems transparency log event.
 class TransparencyLogEvent < ApplicationRecord
+  has_many :signed_event_envelopes,
+    class_name: "TransparencyLogSignedEventEnvelope",
+    foreign_key: :event_id,
+    primary_key: :event_uuid,
+    inverse_of: :event,
+    dependent: :restrict_with_exception
+  has_many :deliveries,
+    class_name: "TransparencyLogDelivery",
+    foreign_key: :event_id,
+    primary_key: :event_uuid,
+    inverse_of: :event,
+    dependent: :restrict_with_exception
+
   BASELINE_EVENT_TYPES = %w[
     gem.baseline
     gem.version.baseline

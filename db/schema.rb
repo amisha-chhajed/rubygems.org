@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_12_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_14_010100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "hstore"
   enable_extension "pg_catalog.plpgsql"
@@ -661,6 +661,33 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_12_000000) do
     t.string "version_sha256"
   end
 
+  create_table "transparency_log_deliveries", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "completion_observation_id"
+    t.datetime "created_at", null: false
+    t.uuid "event_id", null: false
+    t.datetime "last_error_at"
+    t.string "last_error_code", limit: 100
+    t.string "last_error_detail", limit: 500
+    t.string "last_error_phase", limit: 32
+    t.string "log_identity", limit: 255, null: false
+    t.datetime "next_retry_at"
+    t.string "phase", limit: 32, default: "awaiting_envelope", null: false
+    t.integer "reconciliation_attempt_count", default: 0, null: false
+    t.uuid "signed_event_envelope_id"
+    t.integer "signing_attempt_count", default: 0, null: false
+    t.integer "submission_attempt_count", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["completion_observation_id"], name: "index_transparency_log_deliveries_on_completion_observation_id"
+    t.index ["event_id", "log_identity"], name: "index_tlog_deliveries_on_event_log", unique: true
+    t.index ["phase", "next_retry_at"], name: "index_transparency_log_deliveries_on_phase_and_next_retry_at"
+    t.index ["signed_event_envelope_id"], name: "index_transparency_log_deliveries_on_signed_event_envelope_id"
+    t.check_constraint "last_error_phase IS NULL OR (last_error_phase::text = ANY (ARRAY['signing'::character varying, 'submission'::character varying, 'response_verification'::character varying, 'reconciliation'::character varying, 'invariant'::character varying]::text[]))", name: "tlog_deliveries_last_error_phase"
+    t.check_constraint "phase::text = ANY (ARRAY['awaiting_envelope'::character varying, 'ready_to_submit'::character varying, 'submitting'::character varying, 'reconciling'::character varying, 'completed'::character varying, 'quarantined'::character varying]::text[])", name: "tlog_deliveries_phase"
+    t.check_constraint "reconciliation_attempt_count >= 0", name: "tlog_deliveries_reconciliation_attempts_non_negative"
+    t.check_constraint "signing_attempt_count >= 0", name: "tlog_deliveries_signing_attempts_non_negative"
+    t.check_constraint "submission_attempt_count >= 0", name: "tlog_deliveries_submission_attempts_non_negative"
+  end
+
   create_table "transparency_log_events", force: :cascade do |t|
     t.string "actor_handle", limit: 128
     t.string "actor_id", limit: 128, null: false
@@ -715,6 +742,58 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_12_000000) do
     t.index ["status", "created_at"], name: "index_transparency_log_events_on_status_and_created_at"
     t.index ["status"], name: "index_transparency_log_events_on_status"
     t.index ["subject_type", "subject_name"], name: "index_transparency_log_events_on_subject_type_and_subject_name"
+  end
+
+  create_table "transparency_log_inclusion_observations", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.binary "checkpoint", null: false
+    t.binary "checkpoint_sha256", null: false
+    t.uuid "delivery_id", null: false
+    t.binary "entry_bundle", null: false
+    t.binary "entry_bundle_sha256", null: false
+    t.binary "leaf_hash", null: false
+    t.string "log_identity", limit: 255, null: false
+    t.bigint "log_index", null: false
+    t.datetime "observed_at", null: false
+    t.string "observed_via", limit: 64, null: false
+    t.binary "proof_hashes", default: [], null: false, array: true
+    t.binary "rekor_response"
+    t.binary "rekor_response_sha256"
+    t.binary "root_hash", null: false
+    t.uuid "signed_event_envelope_id", null: false
+    t.bigint "tree_size", null: false
+    t.string "verification_policy_id", limit: 255, null: false
+    t.datetime "verified_at", null: false
+    t.index ["delivery_id"], name: "index_transparency_log_inclusion_observations_on_delivery_id"
+    t.index ["signed_event_envelope_id", "log_identity", "log_index"], name: "index_tlog_observations_on_envelope_log_index", unique: true
+    t.check_constraint "(rekor_response IS NULL) = (rekor_response_sha256 IS NULL)", name: "tlog_observations_response_pair"
+    t.check_constraint "log_index < tree_size", name: "tlog_observations_index_within_tree"
+    t.check_constraint "log_index >= 0", name: "tlog_observations_log_index_non_negative"
+    t.check_constraint "observed_via::text = 'submission_201'::text AND rekor_response IS NOT NULL OR observed_via::text = 'duplicate_409_reconciliation'::text AND rekor_response IS NULL", name: "tlog_observations_response_source"
+    t.check_constraint "observed_via::text = ANY (ARRAY['submission_201'::character varying, 'duplicate_409_reconciliation'::character varying]::text[])", name: "tlog_observations_observed_via"
+    t.check_constraint "octet_length(checkpoint_sha256) = 32", name: "tlog_observations_checkpoint_digest_length"
+    t.check_constraint "octet_length(entry_bundle_sha256) = 32", name: "tlog_observations_entry_digest_length"
+    t.check_constraint "octet_length(leaf_hash) = 32", name: "tlog_observations_leaf_hash_length"
+    t.check_constraint "octet_length(root_hash) = 32", name: "tlog_observations_root_hash_length"
+    t.check_constraint "rekor_response_sha256 IS NULL OR octet_length(rekor_response_sha256) = 32", name: "tlog_observations_rekor_response_digest_length"
+    t.check_constraint "tree_size > 0", name: "tlog_observations_tree_size_positive"
+  end
+
+  create_table "transparency_log_signed_event_envelopes", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.binary "canonical_payload", null: false
+    t.uuid "event_id", null: false
+    t.string "log_identity", limit: 255, null: false
+    t.binary "payload_sha256", null: false
+    t.binary "public_key_der", null: false
+    t.binary "rekor_request", null: false
+    t.binary "rekor_request_sha256", null: false
+    t.string "service_key_id", limit: 128, null: false
+    t.binary "signature", null: false
+    t.string "signing_algorithm", limit: 64, null: false
+    t.uuid "supersedes_envelope_id"
+    t.index ["event_id", "log_identity"], name: "index_tlog_envelopes_on_event_log_root", unique: true, where: "(supersedes_envelope_id IS NULL)"
+    t.index ["supersedes_envelope_id"], name: "idx_on_supersedes_envelope_id_6b485f9f61", unique: true
+    t.check_constraint "octet_length(payload_sha256) = 32", name: "tlog_envelopes_payload_sha256_length"
+    t.check_constraint "octet_length(rekor_request_sha256) = 32", name: "tlog_envelopes_request_sha256_length"
   end
 
   create_table "transparency_tree_heads", force: :cascade do |t|
@@ -886,6 +965,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_12_000000) do
   add_foreign_key "rubygem_transfers", "organizations"
   add_foreign_key "rubygem_transfers", "users", column: "created_by_id"
   add_foreign_key "rubygems", "organizations", on_delete: :nullify
+  add_foreign_key "transparency_log_deliveries", "transparency_log_events", column: "event_id", primary_key: "event_uuid"
+  add_foreign_key "transparency_log_deliveries", "transparency_log_inclusion_observations", column: "completion_observation_id"
+  add_foreign_key "transparency_log_deliveries", "transparency_log_signed_event_envelopes", column: "signed_event_envelope_id"
+  add_foreign_key "transparency_log_inclusion_observations", "transparency_log_deliveries", column: "delivery_id"
+  add_foreign_key "transparency_log_inclusion_observations", "transparency_log_signed_event_envelopes", column: "signed_event_envelope_id"
+  add_foreign_key "transparency_log_signed_event_envelopes", "transparency_log_events", column: "event_id", primary_key: "event_uuid"
+  add_foreign_key "transparency_log_signed_event_envelopes", "transparency_log_signed_event_envelopes", column: "supersedes_envelope_id"
   add_foreign_key "versions", "api_keys", column: "pusher_api_key_id"
   add_foreign_key "versions", "rubygems", name: "versions_rubygem_id_fk"
   add_foreign_key "web_hooks", "users", name: "web_hooks_user_id_fk"
