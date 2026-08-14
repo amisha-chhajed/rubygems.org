@@ -7,6 +7,7 @@ module TransparencyLogHelpers
   TEST_BASELINE_OBSERVED_AT = Time.zone.parse("2026-08-12T01:02:03Z")
   TEST_PRIVATE_KEY = OpenSSL::PKey::EC.generate("prime256v1")
   TEST_REKOR_URL = "http://localhost:3004"
+  TEST_LOG_IDENTITY = "rekor.example"
 
   included do
     setup :configure_transparency_log_test_environment
@@ -30,5 +31,6 @@ module TransparencyLogHelpers
   def configure_transparency_log_test_environment
     TransparencyLog.configuration.private_key ||= TEST_PRIVATE_KEY.to_pem
     TransparencyLog.configuration.rekor_url ||= TEST_REKOR_URL
+    TransparencyLog.configuration.log_identity ||= TEST_LOG_IDENTITY
   end
 end

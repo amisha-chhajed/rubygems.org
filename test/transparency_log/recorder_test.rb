@@ -53,4 +53,52 @@ class TransparencyLog::RecorderTest < ActiveSupport::TestCase
     assert_predicate event, :persisted?
     assert_predicate event, :pending?
   end
+
+  test "creates a signed envelope and ready delivery for the configured log" do
+    event = @recorder.record(@attributes, enqueue: false)
+
+    envelope = event.signed_event_envelopes.sole
+    delivery = event.deliveries.sole
+
+    assert_equal TransparencyLog.configuration.log_identity, envelope.log_identity
+    assert_equal TransparencyLog.configuration.log_identity, delivery.log_identity
+    assert_equal envelope, delivery.signed_event_envelope
+    assert_predicate delivery, :ready_to_submit?
+    assert_equal 1, delivery.signing_attempt_count
+  end
+
+  test "stores the exact signed payload and Rekor request bytes in the envelope" do
+    event = @recorder.record(@attributes, enqueue: false)
+    envelope = event.signed_event_envelopes.sole
+
+    expected_payload = event.canonical_payload.to_json
+    expected_request = event.rekor_request_body.to_json
+    public_key = OpenSSL::PKey.read(envelope.public_key_der)
+
+    assert_equal expected_payload, envelope.canonical_payload
+    assert_equal Digest::SHA256.digest(expected_payload), envelope.payload_sha256
+    assert_equal event.payload_digest, envelope.payload_sha256
+    assert public_key.verify(OpenSSL::Digest.new("SHA256"), envelope.signature, envelope.canonical_payload)
+
+    assert_equal expected_request, envelope.rekor_request
+    assert_equal Digest::SHA256.digest(expected_request), envelope.rekor_request_sha256
+  end
+
+  test "rolls back all records and enqueueing when persistence fails" do
+    original_log_identity = TransparencyLog.configuration.log_identity
+    TransparencyLog.configuration.log_identity = nil
+    counts = [TransparencyLogEvent, TransparencyLogSignedEventEnvelope, TransparencyLogDelivery].index_with(&:count)
+
+    assert_no_enqueued_jobs only: ProcessTransparencyLogEventJob do
+      assert_raises(ActiveRecord::RecordInvalid) do
+        @recorder.record(@attributes)
+      end
+    end
+
+    counts.each do |model, count|
+      assert_equal count, model.count
+    end
+  ensure
+    TransparencyLog.configuration.log_identity = original_log_identity
+  end
 end

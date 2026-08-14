@@ -5,4 +5,5 @@ require_relative "../../lib/transparency_log"
 TransparencyLog.configure do |c|
   c.rekor_url = ENV["TRANSPARENCY_LOG_REKOR_URL"] if ENV["TRANSPARENCY_LOG_REKOR_URL"].presence
   c.private_key = ENV["TRANSPARENCY_LOG_PRIVATE_KEY"] if ENV["TRANSPARENCY_LOG_PRIVATE_KEY"].presence
+  c.log_identity = ENV["TRANSPARENCY_LOG_IDENTITY"] if ENV["TRANSPARENCY_LOG_IDENTITY"].presence
 end

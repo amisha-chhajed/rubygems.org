@@ -12,7 +12,7 @@ class TransparencyLog::Signer
   end
 
   def sign(canonical_payload)
-    payload = canonical_payload.to_json
+    payload = canonical_payload.is_a?(String) ? canonical_payload : canonical_payload.to_json
     public_key_der = @private_key.public_to_der
 
     {

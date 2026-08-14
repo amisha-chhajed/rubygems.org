@@ -18,4 +18,10 @@ class TransparencyLog::ConfigurationTest < ActiveSupport::TestCase
 
     assert_equal "my_private_key", @config.private_key
   end
+
+  test "#log_identity" do
+    @config.log_identity = "rekor.example"
+
+    assert_equal "rekor.example", @config.log_identity
+  end
 end
